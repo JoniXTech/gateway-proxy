@@ -115,6 +115,9 @@ async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
         if let Some(mut activity) = CONFIG.activity.clone() {
             // Replace {{shard}} with the actual ID
             activity.name = activity.name.replace("{{shard}}", &shard_id.to_string());
+            if let Some(state) = &mut activity.state {
+                *state = state.replace("{{shard}}", &shard_id.to_string());
+            }
             // Will only error if activities are empty, so we can unwrap
             builder = builder.presence(
                 UpdatePresencePayload::new(vec![activity], false, None, CONFIG.status).unwrap(),
@@ -133,7 +136,7 @@ async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
                 .message_cache_size(0)
                 .build(),
         );
-        let guild_cache = cache::Guilds::new(cache.clone());
+        let cache = cache::Cache::new(cache.clone());
 
         let ready = state::Ready::new();
 
@@ -142,7 +145,7 @@ async fn run() -> Result<(), Box<dyn Error + Send + Sync>> {
             sender: shard.sender(),
             events: broadcast_tx.clone(),
             ready,
-            guilds: guild_cache,
+            cache,
         });
 
         // Now pipe the events into the broadcast

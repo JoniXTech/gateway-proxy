@@ -126,7 +126,7 @@ pub async fn events(
         if let Ok(Some(event)) = parse(payload, event_type_flags) {
             match event {
                 TwilightGatewayEvent::Dispatch(_, event) => {
-                    shard_state.guilds.update(Event::from(event));
+                    shard_state.cache.update(Event::from(event));
                 }
                 TwilightGatewayEvent::InvalidateSession(can_resume) => {
                     debug!("[Shard {shard_id}] Session invalidated, resumable: {can_resume}");
@@ -171,7 +171,7 @@ pub fn update_shard_statistics(
     metrics::histogram!("gateway_shard_status", "shard" => shard_id.to_string())
         .record(connection_status);
 
-    let stats = shard_state.guilds.stats();
+    let stats = shard_state.cache.stats();
 
     metrics::gauge!("gateway_cache_emojis", "shard" => shard_id.to_string())
         .set(stats.emojis() as f64);
